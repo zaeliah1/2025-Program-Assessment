@@ -1,0 +1,226 @@
+import pandas
+import numpy
+
+
+# Functions go here
+def make_statement(statement, decoration):
+    """Emphasises headings by adding decoration
+    at the start and end"""
+
+    return f"{decoration * 3} {statement} {decoration * 3}"
+
+
+def string_check(question, valid_ans_list=('yes', 'no'),
+                 num_letters=1):
+    """Checks that users enter the full word
+    or the first letter of a word from a list of valid responses"""
+
+    while True:
+
+        response = input(question).lower()
+
+        for item in valid_ans_list:
+
+            # check if the response is the entire world
+            if response == item:
+                return item
+
+            # check if it's the first letter
+            elif response == item[:num_letters]:
+                return item
+
+        print(f"Please choose an option from {valid_ans_list}")
+
+
+def instructions():
+    make_statement("Instructions", "ℹ️")
+
+    print('''
+    
+For each meat enter ...
+- Your Meat Of Choice
+- Your budget
+
+The program will record the meat purchased and work out the
+total amount and any extra charges
+
+Once you have bought all the meat you want or entered the 
+exit code ('xxx'), the program will display the meat
+sales information and write the data to a text file.
+
+
+    ''')
+
+
+def not_blank(question):
+    """Checks that a user response is not blank"""
+
+    while True:
+        response = input(question)
+
+        if response != "":
+            return response
+
+        print("Sorry, this can't be blank. Please try again.")
+
+
+def int_check(question, low, high):
+    """Checks users enter an integer between two values"""
+
+    error = f"Oops - please enter an integer between {low} and {high}."
+
+    while True:
+
+        try:
+            # Change the response to an integer and check that it's more than zero
+            response = int(input(question))
+
+            if low <= response <= high:
+                return response
+            else:
+                print(error)
+
+        except ValueError:
+            print(error)
+
+
+def currency(x):
+    """Formats numbers as currency ($#.##)"""
+    return "${:.2f}".format(x)
+
+
+# Main Routine goes here
+
+# Initialise max spending
+MAX_SPEND = 200
+budget = 0
+
+# lists to hold all meats
+all_meats = ["Beef", "Chicken", "Lamb", "Venison", "Fish", "Turkey",
+             "Duck", "Pork", "Lobster", "Mutton"]
+all_meat_costs = [19, 13.60, 18, 25, 16.60, 21.20, 48.50, 14, 100, 14]
+
+meat_dict = {
+    'Meat': all_meats,
+    'Meat Price': all_meat_costs,
+}
+
+# create dataframe
+meat_frame = pandas.DataFrame(meat_dict)
+
+# Rearranging Index
+meat_frame.index = numpy.arange(1, len(meat_frame) + 1)
+
+# Program main heading
+print(make_statement("Meat selector", "🍖🍖🍖"))
+
+# Ask user for their name (and check it's not blank)
+print()
+name = not_blank("Name: ")
+
+# Ask user if they want to see the instructions
+# display them if necessary
+print()
+want_instructions = string_check(f"Do you want to see the instructions {name}? ")
+
+if want_instructions == "yes":
+    instructions()
+
+print()
+
+# Ask for the users budget
+budget = int_check("What is your budget (Max of 200)? ", 0, 200)
+
+print(f"Your budget is ${budget}")
+print()
+
+# Set purchased meats to nothing
+purchased_meats = []
+purchased_prices = []
+
+# Create a purchase dictionary
+purchased_dict = {
+    'Meat': purchased_meats,
+    'Meat Price': purchased_prices,
+}
+
+# import list of meats
+meat_string = meat_frame.to_string(index=False)
+
+# Loop to get name 
+while budget <= MAX_SPEND:
+
+    print()
+
+    # Display menu items
+    print("Here is a list of meat you can choose from:")
+    print(meat_frame)
+    print()
+
+    # Get user to select a row from the index
+    try:
+        choice = int_check("Choose your meat with the number of the row: ", 1, 10)
+
+        selected_row = all_meats[choice - 1]
+        meat_price = all_meat_costs[choice - 1]
+
+        if budget >= meat_price:
+            budget -= meat_price
+
+            purchased_meats.append(selected_row)
+            purchased_prices.append(meat_price)
+
+            # display user meat choice
+            print(f"You selected {selected_row}, costing ${meat_price}")
+            print(f"Your new budget is ${budget} ")
+            print()
+
+        else:
+            print(f"Sorry, {selected_row} costing  ${meat_price} exceeds your budget."
+                  f"please try again.")
+            continue
+
+        repeat = string_check("Would you like to purchase another Meat?")
+
+        if repeat == "no":
+            break
+
+    except ValueError:
+        print("Enter a valid number")
+
+# End of Loop
+
+# Itemised purchase list
+total_spent = sum(purchased_prices)
+
+# Create purchased table
+purchased_frame = pandas.DataFrame(purchased_dict)
+
+# Rearranging Index
+purchased_frame.index = numpy.arange(1, len(purchased_frame) + 1)
+
+if purchased_meats:
+    print(make_statement(f"Here are {name}'s purchases:", "💰"))
+    print()
+    print(purchased_frame)
+    print(f"The total amount you spent was ${total_spent}")
+
+# Calculate the total payable for each ticket
+# meat_frame['Total'] = meat_frame['Ticket Price']
+# meat_frame['Profit'] = meat_frame['Ticket Price'] - 5
+
+# Work out total paid and total profit...
+# total_paid = meat_frame['Total'].sum()
+# total_profit = meat_frame['Profit'].sum()
+
+
+# Currency Formatting (uses currency function)
+# add_dollars = ['Meat Price', 'Total', 'Profit']
+# for var_item in add_dollars:
+# meat_frame[var_item] = meat_frame[var_item].apply(currency)
+
+# Output meat frame without index
+# meat_string = meat_frame.to_string(index=False)
+
+# total_paid_string = f"Total Paid: ${total_paid:.2f}"
+# total_profit_string = f"Total Profit: ${total_profit:.2f}"
