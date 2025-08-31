@@ -129,7 +129,7 @@ if want_instructions == "yes":
 print()
 
 # Ask for the users budget
-budget = int_check("What is your budget (Max of 200)? ", 0, 200)
+budget = int_check("What is your budget (Max of 200)? ", 15, 200)
 
 print(f"Your budget is ${budget}")
 print()
